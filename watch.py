@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import time
+import pathlib
 import threading
 import argparse
 
@@ -8,15 +9,15 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 parser = argparse.ArgumentParser(prog="tuftywatcher")
-parser.add_argument("--serial", help="Serial port to connect to", default="/dev/ttyACM0")
-parser.add_argument("--script", help="Python script to run on file change", default="main.py")
+parser.add_argument("--serial", "-s", help="Serial port to connect to", default="/dev/ttyACM0")
+parser.add_argument("--app", "-a", help="Tufty app to run on file change", default="main.py")
 
 
 class ReloadHandler(FileSystemEventHandler):
-    def __init__(self, serial, script):
+    def __init__(self, serial, app):
         self.last_run = 0
         self.serial = serial
-        self.script = script
+        self.app = app
         self.current_process = None
 
     def on_modified(self, event):
@@ -39,12 +40,18 @@ class ReloadHandler(FileSystemEventHandler):
         print("Resetting device...")
         subprocess.run(['mpremote', self.serial, 'reset'], capture_output=True, text=True)
 
-        print("Running script...")
-        self.current_process = subprocess.Popen(['mpremote', 'connect', self.serial, 'run', self.script])
+        print("Running app...")
+        app_path = None
+
+        if (self.app == "main.py"):
+            app_path = pathlib.PurePath(self.app)
+        else:
+            app_path = pathlib.PurePath('apps', self.app, "__init__.py")
+        self.current_process = subprocess.Popen(['mpremote', 'connect', self.serial, 'run', app_path])
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    handler = ReloadHandler(args.serial, args.script)
+    handler = ReloadHandler(args.serial, args.app)
     observer = Observer()
     observer.schedule(handler, path='.', recursive=True)
     observer.start()
