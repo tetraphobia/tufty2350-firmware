@@ -14,8 +14,8 @@ screen.antialias = screen.X2
 
 # details to be shown on the card
 id_photo = image.load("avatar.png")
-id_name = "Jimmy"
-id_role = "smth "
+id_name = "Your Name"
+id_role = "Your Job"
 
 # see the 'assets/social' folder to see what's supported
 id_socials = {"bluesky": {"icon": None, "handle": ""},
